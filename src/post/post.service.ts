@@ -21,7 +21,11 @@ export class PostService {
   }
 
   findOne(id: number) {
-    return this.repository.findOne(id);
+    return this.repository.findOne({
+      where: {
+        id,
+      },
+    });
   }
 
   update(id: number, dto: UpdatePostDto) {
