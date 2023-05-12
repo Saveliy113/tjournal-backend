@@ -27,7 +27,7 @@ export class PostController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.postService.findOne(Number(id));
+    return this.postService.findOne(+id);
   }
 
   @Patch(':id')
