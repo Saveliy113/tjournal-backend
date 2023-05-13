@@ -75,17 +75,26 @@ export class PostService {
   }
 
   async findOne(id: number) {
-    const find = await this.repository.findOne({
+    await this.repository
+      .createQueryBuilder('posts')
+      .whereInIds(id)
+      .update()
+      .set({
+        views: () => `views + 1`,
+      })
+      .execute();
+
+    return this.repository.findOne({
       where: {
         id,
       },
     });
+    // if (!find) {
+    //   throw new NotFoundException('Статья не найдена');
+    // }
 
-    if (!find) {
-      throw new NotFoundException('Статья не найдена');
-    }
-
-    return find;
+    // this.repository.update(id, {});
+    // return find;
   }
 
   async update(id: number, dto: UpdatePostDto) {
