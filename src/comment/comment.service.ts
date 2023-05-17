@@ -1,33 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { CommentEntity } from './entities/comment.entity';
-import { Repository } from 'typeorm';
+import { AppDataSource as appDataSource } from 'src/data-source';
 
 @Injectable()
 export class CommentService {
-  constructor(
-    @InjectRepository(CommentEntity)
-    private repository: Repository<CommentEntity>,
-  ) {}
+  private readonly commentsRepository =
+    appDataSource.getRepository(CommentEntity);
 
   create(dto: CreateCommentDto) {
-    return this.repository.save({
+    return this.commentsRepository.save({
       text: dto.text,
       post: {
         id: dto.postId,
       },
-      user: { id: 2 },
+      user: { id: 11 },
     });
   }
 
   findAll() {
-    return this.repository.find();
+    return this.commentsRepository.find();
   }
 
   findOne(id: number) {
-    return this.repository.findOne({
+    return this.commentsRepository.findOne({
       where: {
         id,
       },
@@ -35,10 +32,10 @@ export class CommentService {
   }
 
   update(id: number, dto: UpdateCommentDto) {
-    return this.repository.update(id, dto);
+    return this.commentsRepository.update(id, dto);
   }
 
   remove(id: number) {
-    return this.repository.delete(id);
+    return this.commentsRepository.delete(id);
   }
 }

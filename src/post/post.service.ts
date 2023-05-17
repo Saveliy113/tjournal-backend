@@ -1,25 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { PostEntity } from './entities/post.entity';
-import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { SearchPostDto } from './dto/search-post.dto';
+import { AppDataSource } from 'src/data-source';
 
 @Injectable()
 export class PostService {
-  constructor(
-    @InjectRepository(PostEntity)
-    private repository: Repository<PostEntity>,
-  ) {}
+  private readonly postsRepository = AppDataSource.getRepository(PostEntity);
 
   create(dto: CreatePostDto) {
-    return this.repository.save(dto);
+    return this.postsRepository.save(dto);
   }
 
   findAll() {
-    return this.repository.find({
+    return this.postsRepository.find({
       order: {
         createdAt: 'DESC',
       },
@@ -27,7 +23,7 @@ export class PostService {
   }
 
   async popular() {
-    const qb = this.repository.createQueryBuilder();
+    const qb = this.postsRepository.createQueryBuilder();
 
     qb.orderBy('views', 'DESC');
     qb.limit(10);
@@ -41,7 +37,7 @@ export class PostService {
   }
 
   async search(dto: SearchPostDto) {
-    const qb = this.repository.createQueryBuilder('p');
+    const qb = this.postsRepository.createQueryBuilder('p');
 
     qb.limit(dto.limit || 0);
     qb.take(dto.take || 10);
@@ -75,7 +71,7 @@ export class PostService {
   }
 
   async findOne(id: number) {
-    await this.repository
+    await this.postsRepository
       .createQueryBuilder('posts')
       .whereInIds(id)
       .update()
@@ -84,21 +80,15 @@ export class PostService {
       })
       .execute();
 
-    return this.repository.findOne({
+    return this.postsRepository.findOne({
       where: {
         id,
       },
     });
-    // if (!find) {
-    //   throw new NotFoundException('Статья не найдена');
-    // }
-
-    // this.repository.update(id, {});
-    // return find;
   }
 
   async update(id: number, dto: UpdatePostDto) {
-    const find = await this.repository.findOne({
+    const find = await this.postsRepository.findOne({
       where: {
         id,
       },
@@ -108,11 +98,11 @@ export class PostService {
       throw new NotFoundException('Статья не найдена');
     }
 
-    return this.repository.update(id, dto);
+    return this.postsRepository.update(id, dto);
   }
 
   async remove(id: number) {
-    const find = await this.repository.findOne({
+    const find = await this.postsRepository.findOne({
       where: {
         id,
       },
@@ -122,6 +112,6 @@ export class PostService {
       throw new NotFoundException('Статья не найдена');
     }
 
-    return this.repository.delete(id);
+    return this.postsRepository.delete(id);
   }
 }

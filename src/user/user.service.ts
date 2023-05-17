@@ -1,29 +1,24 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
-import { Repository } from 'typeorm/repository/Repository';
-import { FindOneOptions } from 'typeorm';
 import { LoginUserDto } from './dto/login-user.dto';
+import { AppDataSource as appDataSource } from 'src/data-source';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(UserEntity)
-    private repository: Repository<UserEntity>,
-  ) {}
+  private readonly userRepository = appDataSource.getRepository(UserEntity);
 
   create(dto: CreateUserDto) {
-    return this.repository.save(dto);
+    return this.userRepository.save(dto);
   }
 
   findAll() {
-    return this.repository.find();
+    return this.userRepository.find();
   }
 
   findById(id: number) {
-    return this.repository.findOne({
+    return this.userRepository.findOne({
       where: {
         id,
       },
@@ -31,7 +26,7 @@ export class UserService {
   }
 
   findByCond(cond: LoginUserDto) {
-    return this.repository.findOne({
+    return this.userRepository.findOne({
       where: {
         email: cond.email,
         password: cond.password,
@@ -40,10 +35,10 @@ export class UserService {
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    return this.userRepository.update(id, updateUserDto);
   }
 
   remove(id: number) {
-    return `This action removes a #${id} user`;
+    return this.userRepository.delete(id);
   }
 }
