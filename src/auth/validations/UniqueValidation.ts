@@ -14,7 +14,11 @@ export class UniqueOnDatabaseExistConstraint
   async validate(value: any, args: ValidationArguments) {
     const entity = args.object[`class_entity_${args.property}`];
     return AppDataSource.manager
-      .count(entity, { [args.property]: value })
+      .count(entity, {
+        where: {
+          [args.property]: value,
+        },
+      })
       .then((count) => count < 1);
   }
 }
