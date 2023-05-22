@@ -16,6 +16,16 @@ async function bootstrap() {
       console.error('Error during Data Source initialization', err);
     });
 
-  await app.listen(3000);
+  app.enableCors({
+    origin: [/^(.*)/],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    preflightContinue: false,
+    optionsSuccessStatus: 200,
+    credentials: true,
+    allowedHeaders:
+      'Origin, X-Requested-With,Content-Type,Accept,Authorization,authorization,X-Forwarded-for',
+  });
+
+  await app.listen(7777);
 }
 bootstrap();
