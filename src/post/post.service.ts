@@ -11,7 +11,15 @@ export class PostService {
   private readonly postsRepository = AppDataSource.getRepository(PostEntity);
 
   create(dto: CreatePostDto) {
-    return this.postsRepository.save(dto);
+    const firstParagraph = dto.body.find((obj) => obj.type === 'paragraph')
+      ?.data.text;
+
+    return this.postsRepository.save({
+      title: dto.title,
+      body: dto.body,
+      tags: dto.tags,
+      description: firstParagraph || '',
+    });
   }
 
   findAll() {
@@ -98,7 +106,15 @@ export class PostService {
       throw new NotFoundException('Статья не найдена');
     }
 
-    return this.postsRepository.update(id, dto);
+    const firstParagraph = dto.body.find((obj) => obj.type === 'paragraph')
+      ?.data.text;
+
+    return this.postsRepository.update(id, {
+      title: dto.title,
+      body: dto.body,
+      tags: dto.tags,
+      description: firstParagraph || '',
+    });
   }
 
   async remove(id: number) {
