@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { PostEntity } from './entities/post.entity';
@@ -10,14 +10,15 @@ import { AppDataSource } from 'src/data-source';
 export class PostService {
   private readonly postsRepository = AppDataSource.getRepository(PostEntity);
 
-  create(dto: CreatePostDto) {
+  create(dto: CreatePostDto, userId: number) {
     const firstParagraph = dto.body.find((obj) => obj.type === 'paragraph')
-      ?.data.text;
+      ?.data?.text;
 
     return this.postsRepository.save({
       title: dto.title,
       body: dto.body,
       tags: dto.tags,
+      user: { id: userId },
       description: firstParagraph || '',
     });
   }
@@ -45,7 +46,9 @@ export class PostService {
   }
 
   async search(dto: SearchPostDto) {
-    const qb = this.postsRepository.createQueryBuilder('p');
+    const qb = this.postsRepository.createQueryBuilder('posts');
+
+    qb.leftJoinAndSelect('posts.user', 'user');
 
     qb.limit(dto.limit || 0);
     qb.take(dto.take || 10);
@@ -81,7 +84,7 @@ export class PostService {
   async findOne(id: number) {
     await this.postsRepository
       .createQueryBuilder('posts')
-      .whereInIds(id)
+      .leftJoinAndSelect('posts.user', 'user')
       .update()
       .set({
         views: () => `views + 1`,
@@ -95,7 +98,7 @@ export class PostService {
     });
   }
 
-  async update(id: number, dto: UpdatePostDto) {
+  async update(id: number, dto: UpdatePostDto, userId: number) {
     const find = await this.postsRepository.findOne({
       where: {
         id,
@@ -113,11 +116,12 @@ export class PostService {
       title: dto.title,
       body: dto.body,
       tags: dto.tags,
+      user: { id: userId },
       description: firstParagraph || '',
     });
   }
 
-  async remove(id: number) {
+  async remove(id: number, userId: number) {
     const find = await this.postsRepository.findOne({
       where: {
         id,
@@ -126,6 +130,10 @@ export class PostService {
 
     if (!find) {
       throw new NotFoundException('Статья не найдена');
+    }
+
+    if (find.user.id !== userId) {
+      throw new ForbiddenException('Нет доступа к этой статье!');
     }
 
     return this.postsRepository.delete(id);
